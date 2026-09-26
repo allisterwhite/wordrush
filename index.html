@@ -1243,7 +1243,7 @@ function makeSlide(s){
     // Term number: shown immediately if numDelay is 0, otherwise hidden until
     // numDelay seconds after the slide appears (independent-answer window).
     const numSafeKey=key.replace(/\W/g,'_');
-    const showNumNow = s.showNum && s.word.n && (!s.numDelay || s.numDelay<=0);
+    const showNumNow = s.showNum && s.word.n && (!s.numDelay || s.numDelay<=0 || revealed.has(key));
     const numBadgeHtml = s.showNum && s.word.n
       ? `<div id="numBadge_${numSafeKey}" style="font-family:'Press Start 2P',monospace;font-size:clamp(16px,3.5vw,28px);color:var(--yellow);letter-spacing:-1px;margin-bottom:8px;text-shadow:2px 2px 0 rgba(0,0,0,0.4)">${showNumNow?'#'+s.word.n:''}</div>`
       : '';
@@ -1273,10 +1273,11 @@ function makeSlide(s){
       const paint=()=>{
         if(_slideGen!==myGen || !badge){ clearInterval(iv); return; }
         const left=Math.ceil((endAt-Date.now())/1000);
-        if(left<=0){
+        const early=revealed.has(key);
+        if(left<=0 || early){
           badge.style.opacity='1'; badge.style.fontSize='';
           badge.textContent='#'+s.word.n;
-          sfxTermNumber();
+          if(!early) sfxTermNumber();
           clearInterval(iv);
         } else {
           badge.style.opacity='0.35';
@@ -1297,6 +1298,8 @@ function makeSlide(s){
         box.innerHTML=`<div class="answer-jp">${answerText}</div>`;
         const awSec=div.querySelector(`#awSec_${key.replace(/\W/g,'_')}`);
         awSec.style.opacity='1';awSec.style.pointerEvents='auto';
+        const nb=div.querySelector('#numBadge_'+numSafeKey);
+        if(nb && s.word.n){ nb.style.opacity='1'; nb.textContent='#'+s.word.n; }
       });
     }
   }
