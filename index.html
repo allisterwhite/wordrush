@@ -84,6 +84,7 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:#fff;height:
 .q-instruct{font-size:11px;color:rgba(255,255,255,0.32);font-weight:900;letter-spacing:3px;text-transform:uppercase;margin-bottom:18px}
 .q-img{max-height:32vh;max-width:80%;border-radius:12px;object-fit:contain;margin-bottom:12px;box-shadow:0 4px 24px rgba(0,0,0,0.5);background:#fff;padding:12px}
 .q-english{font-family:'Press Start 2P',monospace;font-size:clamp(14px,3.8vw,34px);text-align:center;line-height:1.7;color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,0.5);max-width:84%;letter-spacing:-1px}
+.num-badge{font-family:'Press Start 2P',monospace;font-size:clamp(16px,3.6vw,32px);color:var(--yellow);letter-spacing:-1px;margin-bottom:12px;text-shadow:3px 3px 0 rgba(0,0,0,0.45);line-height:1.3;min-height:1.3em}
 .q-english .kw{color:var(--yellow);font-size:1.15em;text-shadow:2px 2px 0 var(--red)}
 .answer-box{margin-top:22px;background:rgba(255,255,255,0.04);border:2px dashed rgba(255,255,255,0.14);border-radius:14px;padding:16px 48px;min-width:260px;text-align:center;cursor:pointer;transition:all 0.2s}
 .answer-box:hover{border-color:rgba(255,215,0,0.4)}
@@ -351,7 +352,7 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:#fff;height:
 .rules-structure{display:flex;flex-direction:column;gap:8px}
 .rules-struct-item{display:flex;align-items:center;gap:10px;font-size:12px;color:rgba(255,255,255,0.55);font-weight:700}
 .rules-struct-icon{font-size:16px;flex-shrink:0}
-.rules-items-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.rules-items-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px}
 .rules-item-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 8px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px}
 .rules-item-emoji{font-size:28px}
 .rules-jp{display:block;color:rgba(255,255,255,0.35);font-size:11px;margin-top:4px;line-height:1.6}
@@ -360,7 +361,8 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:#fff;height:
 .rules-item-effect.pos{color:#4ade80}
 .rules-item-effect.neg{color:#f87171}
 .rules-item-note{font-size:11px;color:rgba(255,255,255,0.3);font-weight:700;line-height:1.6;border-top:1px solid rgba(255,255,255,0.06);padding-top:10px}
-@media(max-width:580px){.rules-items-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:780px){.rules-items-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:480px){.rules-items-grid{grid-template-columns:repeat(2,1fr)}}
 
 /* ── VICTORY SCREEN ── */
 .s-victory{background:radial-gradient(ellipse at center,#1a0a00 0%,var(--darker) 100%);display:flex;flex-direction:row;align-items:stretch;justify-content:center;gap:0;overflow:hidden;position:absolute;inset:0}
@@ -610,12 +612,17 @@ body{font-family:'Nunito',sans-serif;background:var(--darker);color:#fff;height:
           <div class="rules-item-card">
             <div class="rules-item-emoji">🧲</div>
             <div class="rules-item-name">Magnet<br>マグネット</div>
-            <div class="rules-item-effect neg">Steal 1 pt from any team<br>任意のチームから1ポイント奪う</div>
+            <div class="rules-item-effect neg">−2 to any team, +1 to you<br>好きなチームから−2、自分に＋1</div>
           </div>
           <div class="rules-item-card">
             <div class="rules-item-emoji">⚡</div>
             <div class="rules-item-name">Lightning<br>イナズマ</div>
             <div class="rules-item-effect neg">−3 from 1st place<br>1位チームから3ポイント減</div>
+          </div>
+          <div class="rules-item-card">
+            <div class="rules-item-emoji">💣</div>
+            <div class="rules-item-name">Bomb<br>ボム</div>
+            <div class="rules-item-effect neg">−1 to every other team<br>他の全チーム−1ポイント</div>
           </div>
         </div>
       </div>
@@ -691,12 +698,17 @@ let activeList = 'basic';
 const ITEMS = [
   {id:'coin',      emoji:'🟡', html:'<span class="coin-ico"></span>', name:'Coin',        effect:'+1 point',         delta:'coin',      pos:true},
   {id:'mushroom',  emoji:'🚀', name:'Boost',       effect:'+3 points!',       delta:+3,          pos:true},
-  {id:'redshell',  emoji:'🧲', name:'Magnet',      effect:'Steal 1 from a team',delta:'redshell', pos:false},
+  {id:'redshell',  emoji:'🧲', name:'Magnet',      effect:'-2 to a team, +1 to you',delta:'redshell', pos:false},
   {id:'blueshell', emoji:'⚡', name:'Lightning',   effect:'-3 from 1st place!',delta:'blueshell', pos:false},
+  {id:'bomb',      emoji:'💣', name:'Bomb',        effect:'-1 to every other team!',delta:'bomb',  pos:false},
   {id:'trophy',    emoji:'🏆', name:'VICTORY!',    effect:'You win!',           delta:'trophy',    pos:true},
 ];
-// weights matching 50 / 12.5 / 25 / 12.5  → multiply by 8 → 40/10/20/10
-const WEIGHTS = [[42,14,24,0],[32,12,24,12],[32,12,24,12],[32,12,24,12]]; // per section
+// Weights per section, in ITEMS order: Coin, Boost, Magnet, Lightning, Bomb (each row totals 80).
+// Rule: Magnet is stronger than Bomb, so it is never more common than Bomb.
+// Round 1:  Coin 45%   · Boost 15% · Magnet 15%   · Lightning 5%  · Bomb 20%
+// Round 2+: Coin 32.5% · Boost 15% · Magnet 17.5% · Lightning 15% · Bomb 20%
+// Rounds past the last row reuse the last row (pickItem clamps).
+const WEIGHTS = [[36,12,12,4,16],[26,12,14,12,16],[26,12,14,12,16],[26,12,14,12,16]];
 
 function pickItem(si) {
   const w=WEIGHTS[Math.min(si,WEIGHTS.length-1)]||WEIGHTS[0];
@@ -734,6 +746,7 @@ let stats = {
   mushrooms:[0,0,0,0,0,0],
   redshells:[0,0,0,0,0,0],
   blueshells:[0,0,0,0,0,0],
+  bombs:[0,0,0,0,0,0],
   pointsFromCorrect:[0,0,0,0,0,0],
   pointsGained:[0,0,0,0,0,0],
   pointsLost:[0,0,0,0,0,0],
@@ -1087,7 +1100,7 @@ function startGame(){
   const inputs=document.querySelectorAll('#teamGrid input');
   inputs.forEach((inp,i)=>{if(i<numTeams) teamNames[i]=inp.value||'Team '+(i+1)});
   scores=Array(6).fill(0);
-  stats={coins:[0,0,0,0,0,0],mushrooms:[0,0,0,0,0,0],redshells:[0,0,0,0,0,0],blueshells:[0,0,0,0,0,0],pointsFromCorrect:[0,0,0,0,0,0],pointsGained:[0,0,0,0,0,0],pointsLost:[0,0,0,0,0,0],itemsUsed:[0,0,0,0,0,0]};
+  stats={coins:[0,0,0,0,0,0],mushrooms:[0,0,0,0,0,0],redshells:[0,0,0,0,0,0],blueshells:[0,0,0,0,0,0],bombs:[0,0,0,0,0,0],pointsFromCorrect:[0,0,0,0,0,0],pointsGained:[0,0,0,0,0,0],pointsLost:[0,0,0,0,0,0],itemsUsed:[0,0,0,0,0,0]};
   revealed=new Set();
   awardedFirst=new Set();
   _sdCustomUsed=false;
@@ -1137,9 +1150,9 @@ function renderBar(){
   }
 }
 
-function bumpScore(i,delta){
-  if(delta>0){ stats.pointsGained[i]+=delta; sfxCorrect(); }
-  else if(delta<0){ stats.pointsLost[i]+=Math.abs(delta); sfxRedShell(); }
+function bumpScore(i,delta,silent){
+  if(delta>0){ stats.pointsGained[i]+=delta; if(!silent) sfxCorrect(); }
+  else if(delta<0){ stats.pointsLost[i]+=Math.abs(delta); if(!silent) sfxRedShell(); }
   scores[i]=Math.max(0,scores[i]+delta);
   const el=document.getElementById('tp'+i);
   if(el){
@@ -1245,7 +1258,7 @@ function makeSlide(s){
     const numSafeKey=key.replace(/\W/g,'_');
     const showNumNow = s.showNum && s.word.n && (!s.numDelay || s.numDelay<=0 || revealed.has(key));
     const numBadgeHtml = s.showNum && s.word.n
-      ? `<div id="numBadge_${numSafeKey}" style="font-family:'Press Start 2P',monospace;font-size:clamp(16px,3.5vw,28px);color:var(--yellow);letter-spacing:-1px;margin-bottom:8px;text-shadow:2px 2px 0 rgba(0,0,0,0.4)">${showNumNow?'#'+s.word.n:''}</div>`
+      ? `<div id="numBadge_${numSafeKey}" class="num-badge">${showNumNow?'#'+s.word.n:''}</div>`
       : '';
 
     div.innerHTML=`
@@ -1275,7 +1288,7 @@ function makeSlide(s){
         const left=Math.ceil((endAt-Date.now())/1000);
         const early=revealed.has(key);
         if(left<=0 || early){
-          badge.style.opacity='1'; badge.style.fontSize='';
+          badge.style.opacity='1';
           badge.textContent='#'+s.word.n;
           if(!early) sfxTermNumber();
           clearInterval(iv);
@@ -1331,6 +1344,7 @@ function makeSlide(s){
       {icon:'🚀',label:'Most Boosts',jp:'ブースト最多',vals:stats.mushrooms,suffix:'boosts',jpSuffix:'回'},
       {icon:'🧲',label:'Most Magnets',jp:'マグネット最多',vals:stats.redshells,suffix:'steals',jpSuffix:'回'},
       {icon:'⚡',label:'Most Lightning',jp:'イナズマ最多',vals:stats.blueshells,suffix:'strikes',jpSuffix:'回'},
+      {icon:'💣',label:'Most Bombs',jp:'ボム最多',vals:stats.bombs,suffix:'bombs',jpSuffix:'回'},
       {icon:'🎁',label:'Most Items Used',jp:'アイテム使用最多',vals:stats.itemsUsed,suffix:'items',jpSuffix:'個'},
     ];
     // Helper functions defined before use
@@ -1730,7 +1744,7 @@ function doRandomize(){
 function givePoint(teamIdx, key, isHelp, useItems){
   const pts = 1;
   stats.pointsFromCorrect[teamIdx] += pts;
-  bumpScore(teamIdx, pts);
+  bumpScore(teamIdx, pts, true);
   sfxCorrect();
   const safeKey=key.replace(/[^a-zA-Z0-9]/g,'_');
   const btn=document.getElementById('ab'+safeKey+teamIdx);
@@ -1773,7 +1787,7 @@ function spinItem(teamIdx, si){ _pendingSi = si||0;
   spinInterval=setInterval(()=>{
     { const it=ITEMS[Math.floor(Math.random()*(ITEMS.length-1))]; emojiEl.innerHTML=it.html||it.emoji; } // never show trophy during spin
     _spinTick++;
-    if(_spinTick%3===0) sfxSpin();
+    sfxSpin();
   },90);
 }
 
@@ -1846,19 +1860,28 @@ function applyItem(){
 
   if(item.id==='coin'){
     stats.coins[team]++; stats.itemsUsed[team]++;
-    bumpScore(team,1); sfxCoin();
+    bumpScore(team,1,true); sfxCoin();
   } else if(item.id==='mushroom'){
     stats.mushrooms[team]++; stats.itemsUsed[team]++;
-    bumpScore(team,3); sfxMushroom();
+    bumpScore(team,3,true); sfxMushroom();
   } else if(item.id==='redshell'){
+    // Magnet: target loses up to 2 (capped at what they have); you gain 1 if anything was taken.
     stats.redshells[team]++; stats.itemsUsed[team]++;
-    if(target>=0){ bumpScore(target,-1); bumpScore(team,1); }
+    if(target>=0){
+      const taken=Math.min(2,scores[target]);
+      if(taken>0){ bumpScore(target,-taken,true); bumpScore(team,1,true); }
+    }
     sfxRedShell();
   } else if(item.id==='blueshell'){
     stats.blueshells[team]++; stats.itemsUsed[team]++;
     const maxPts=Math.max(...scores.slice(0,numTeams));
-    for(let i=0;i<numTeams;i++) if(scores[i]===maxPts) bumpScore(i,-3);
+    for(let i=0;i<numTeams;i++) if(scores[i]===maxPts) bumpScore(i,-3,true);
     sfxBlueShell();
+  } else if(item.id==='bomb'){
+    // Bomb: every other team loses 1 (teams already at 0 are unaffected).
+    stats.bombs[team]++; stats.itemsUsed[team]++;
+    for(let i=0;i<numTeams;i++) if(i!==team && scores[i]>0) bumpScore(i,-1,true);
+    sfxBomb();
   }
   spawnConfetti();
 }
@@ -1984,19 +2007,25 @@ function _chordAt(stepIdx,trackLenBars,chords){
   return c[barIdx%c.length];
 }
 const MUSIC_TRACKS={
-  setup:      {bpm:132,vol:0.40},
-  race:       {bpm:160,vol:0.44}, // every question round shares this track now, including helping rounds — same phase-based track, no separate "helping" music
-  suddenDeath:{bpm:170,vol:0.44}, // the race theme's full arrangement, a touch faster
-  victory:    {bpm:160,vol:0.44}
+  setup:      {bpm:132,vol:0.78},
+  race:       {bpm:160,vol:0.84}, // every question round shares this track now, including helping rounds — same phase-based track, no separate "helping" music
+  suddenDeath:{bpm:170,vol:0.84}, // the race theme's full arrangement, a touch faster
+  victory:    {bpm:160,vol:0.82}
 };
 let _musicGain=null, _musicTimer=null, _musicStep=0, _musicTrack=null, _nextNoteTime=0;
 const MUSIC_LOOKAHEAD=0.1, MUSIC_POLL_MS=25;
 
 function _musicGainNode(){
   if(!_musicGain){
-    _musicGain=_getAc().createGain();
+    const ac=_getAc();
+    _musicGain=ac.createGain();
     _musicGain.gain.value=1;
-    _musicGain.connect(_dest());
+    // Gentle compressor on the music bus only: lets the music sit at the same
+    // loudness as the SFX without the fuller phases (many voices at once) clipping.
+    const comp=ac.createDynamicsCompressor();
+    comp.threshold.value=-14; comp.knee.value=8; comp.ratio.value=4;
+    comp.attack.value=0.005; comp.release.value=0.2;
+    _musicGain.connect(comp); comp.connect(_dest());
   }
   return _musicGain;
 }
@@ -2344,6 +2373,29 @@ function sfxRedShell(){
   g3.gain.value=0.3; src.buffer=buf;
   src.connect(g3); g3.connect(_dest()); src.start(t2);
 }
+function sfxBomb(){
+  const ac=_getAc(), t=ac.currentTime;
+  // fuse: a quick rising hiss
+  const fl=Math.floor(ac.sampleRate*0.3), fb=ac.createBuffer(1,fl,ac.sampleRate), fd=fb.getChannelData(0);
+  for(let i=0;i<fl;i++) fd[i]=(Math.random()*2-1);
+  const fs=ac.createBufferSource(); fs.buffer=fb;
+  const bp=ac.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=2;
+  bp.frequency.setValueAtTime(2500,t); bp.frequency.exponentialRampToValueAtTime(6000,t+0.28);
+  const fg=ac.createGain(); fg.gain.setValueAtTime(0.0001,t); fg.gain.exponentialRampToValueAtTime(0.12,t+0.05); fg.gain.exponentialRampToValueAtTime(0.001,t+0.3);
+  fs.connect(bp); bp.connect(fg); fg.connect(_dest()); fs.start(t);
+  // boom: a falling sine thump plus low rumble
+  const tb=t+0.3;
+  const o=ac.createOscillator(), og=ac.createGain();
+  o.type='sine'; o.frequency.setValueAtTime(140,tb); o.frequency.exponentialRampToValueAtTime(35,tb+0.45);
+  og.gain.setValueAtTime(0.45,tb); og.gain.exponentialRampToValueAtTime(0.001,tb+0.55);
+  o.connect(og); og.connect(_dest()); o.start(tb); o.stop(tb+0.6);
+  const bl=Math.floor(ac.sampleRate*0.6), bb=ac.createBuffer(1,bl,ac.sampleRate), bd=bb.getChannelData(0);
+  for(let i=0;i<bl;i++) bd[i]=(Math.random()*2-1)*Math.pow(1-i/bl,2);
+  const bs=ac.createBufferSource(); bs.buffer=bb;
+  const lp=ac.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=700;
+  const bg=ac.createGain(); bg.gain.value=0.35;
+  bs.connect(lp); lp.connect(bg); bg.connect(_dest()); bs.start(tb);
+}
 function sfxBlueShell(){
   const ac=_getAc(), t=ac.currentTime;
   [523,659,784,988,1319,1568,1976,2093].forEach((f,i)=>{
@@ -2402,15 +2454,18 @@ function sfxCorrect(){
     });
   });
 }
+let _spinNote=0;
 function sfxSpin(){
+  // One soft, bright "tick" per spin frame, walking a bouncy arpeggio
+  // (G–B–D–G–D–B) like a roulette wheel or slot reel. Replaces the old burst
+  // of random-pitch square blips.
   const ac=_getAc(), t=ac.currentTime;
-  for(let i=0;i<16;i++){
-    const f=150+Math.random()*900;
-    const o=ac.createOscillator(), g=ac.createGain();
-    o.type='square'; o.frequency.value=f;
-    g.gain.setValueAtTime(0.06,t+i*0.035); g.gain.exponentialRampToValueAtTime(0.001,t+i*0.035+0.04);
-    o.connect(g); g.connect(_dest()); o.start(t+i*0.035); o.stop(t+i*0.035+0.05);
-  }
+  const notes=[783.99,987.77,1174.66,1567.98,1174.66,987.77];
+  const o=ac.createOscillator(), g=ac.createGain();
+  o.type='triangle'; o.frequency.value=notes[_spinNote++%notes.length];
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.13,t+0.004);
+  g.gain.exponentialRampToValueAtTime(0.001,t+0.07);
+  o.connect(g); g.connect(_dest()); o.start(t); o.stop(t+0.08);
 }
 function sfxVictory(){
   const ac=_getAc(), t=ac.currentTime;
